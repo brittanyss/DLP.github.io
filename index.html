@@ -1,0 +1,509 @@
+<!-- Load Open Sans -->
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{ --accent:#980337; --tabbar-h:56px; }
+
+  /* ===== Tab bar (page-wide) ===== */
+  .tabbar{
+    display:flex; gap:0; width:100%;
+    font-family:'Open Sans',sans-serif;
+    background:#fafafa;
+    border-bottom:2px solid #eee;
+    position: sticky; top: 0; z-index: 2;
+  }
+  .tabbar .tab{
+    flex:1; padding:16px 20px;
+    background:transparent; border:0; cursor:pointer;
+    font-size:14px; letter-spacing:.2px; font-weight:400; color:#333;
+    transition: background .25s ease, transform .2s ease;
+    position:relative; outline:none;
+  }
+  .tabbar .tab:hover{ background:#f6f9fb; transform: translateY(-1px); }
+  .tabbar .tab:focus-visible{ box-shadow:0 0 0 3px rgba(76,108,245,.25) inset; border-radius:6px; }
+  .tabbar .tab.is-active{ font-weight:700; background:#fff; }
+  .tabbar .tab.is-active::after{
+    content:""; position:absolute; left:16px; right:16px; bottom:-2px; height:3px;
+    background:var(--accent); border-radius:2px;
+    transform:scaleX(0); transform-origin:left; animation:underline .35s ease-out forwards;
+  }
+  @keyframes underline{ to{ transform:scaleX(1);} }
+
+  /* ===== Panels ===== */
+  .panels{ position:relative; z-index:1; }
+  .tab-panel{
+    background:#fff;
+    font-family:'Open Sans',sans-serif;
+    min-height: 75vh;    /* not a limiter; content can grow far beyond */
+    padding: 0;
+  }
+  .hidden{ display:none !important; }
+
+  /* ===== In-panel jumpbar ===== */
+  .jumpbar{
+    display:flex; gap:8px; width:100%;
+    background:#fafafa; border-bottom:1px solid #eee;
+    position:sticky; top:var(--tabbar-h); z-index:2; padding:10px 12px;
+  }
+  @media (max-width:768px){ .jumpbar{ overflow:auto; } }
+  .jumpbar .jump{
+    font:12px/1 'Open Sans',sans-serif; letter-spacing:.2px;
+    padding:8px 12px; border-radius:10px; border:1px solid #e3e6ea; background:#fff; color:#333;
+    cursor:pointer; white-space:nowrap;
+    transition:background .2s ease, transform .15s ease, box-shadow .2s ease;
+  }
+  .jumpbar .jump:hover{ background:#f6f9fb; transform:translateY(-1px); }
+  .jumpbar .jump:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(76,108,245,.25); }
+
+  /* ===== Content typography ===== */
+  .prose{ max-width:1000px; margin: 16px auto 40px; padding: 0 20px; line-height:1.6; color:#222 }
+  .prose h2{ font-weight:700; font-size:20px; margin:0 0 16px; letter-spacing:.2px }
+  .prose p{ margin:14px 0; font-weight:400; font-size:14px; line-height:1.7; text-indent:2em }
+  .prose blockquote{ margin:14px 0; font-size:15px;padding:10px 16px; border-left:4px solid #cfd4d9; background:#fafbfc }
+  .muted{ color:#666 }
+  .prose ul, .prose ol{ margin:14px 0; padding-left:1.6em; font-size:14px; line-height:1.7; font-weight:400; }
+  .prose li{ margin:6px 0; }
+  .prose li p{ margin:0; text-indent:0; }
+  .prose li::marker{ color: var(--accent); }
+  .prose figure{ margin:16px 0; padding:0; text-indent:0; }
+  .prose img{ display:block; max-width:100%; height:auto; border-radius:12px; box-shadow:0 6px 16px rgba(0,0,0,.08); }
+  .prose figcaption{ margin-top:8px; font-size:12px; line-height:1.5; color:#666; text-indent:0; }
+  .prose .img-frame{ padding:10px; background:#fff; border:1px solid #eee; border-radius:14px; }
+
+  /* For jump targets to clear sticky bars */
+  .prose h2[id]{ scroll-margin-top: calc(var(--tabbar-h) + 56px + 12px); }
+
+  .backtotop{
+  position: fixed;          /* always float with viewport */
+  right: 20px;
+  top: 50%;                 /* center vertically */
+  transform: translateY(-50%);
+  z-index: 2147483647;
+
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border-radius: 9999px;
+  border: 1px solid #e3e6ea; background: #fff; color:#333;
+  box-shadow: 0 6px 18px rgba(0,0,0,.12);
+  cursor: pointer; font-size: 18px; line-height: 1; text-decoration: none;
+  transition: box-shadow .2s ease;
+}
+  .backtotop:hover{ box-shadow: 0 10px 24px rgba(0,0,0,.16); }
+  .backtotop:focus-visible{ outline:none; box-shadow: 0 0 0 3px rgba(76,108,245,.25), 0 10px 24px rgba(0,0,0,.16); }
+  .backtotopAccent{ background: var(--accent, #980337); color:#fff; border-color: transparent; }
+
+  /* mobile: keep it out of the way near the bottom-right */
+  @media (max-width: 640px){
+    .backtotop{
+      top: auto;
+      bottom: 20px;
+      transform: none;        /* bottom-right on phones */
+    }
+  }
+  /* ===== Panel transitions ===== */
+  .animating .tabbar .tab{ pointer-events:none; opacity:.85; }
+  .fade-enter{ opacity:0; transform:translateY(8px); }
+  .fade-enter-active{ opacity:1; transform:none; transition:opacity .35s ease, transform .35s ease; }
+  .fade-leave{ opacity:1; transform:none; }
+  .fade-leave-active{ opacity:0; transform:translateY(8px); transition:opacity .28s ease, transform .28s ease; }
+  .slide-enter{ opacity:0; transform:translateX(24px); }
+  .slide-enter-active{ opacity:1; transform:none; transition:opacity .35s ease, transform .35s ease; }
+  .slide-leave{ opacity:1; transform:none; }
+  .slide-leave-active{ opacity:0; transform:translateX(-24px); transition:opacity .28s ease, transform .28s ease; }
+
+  @media (prefers-reduced-motion: reduce){
+    .fade-enter,.fade-enter-active,.fade-leave,.fade-leave-active,
+    .slide-enter,.slide-enter-active,.slide-leave,.slide-leave-active{
+      opacity:1; transform:none; transition:none;
+    }
+  }
+</style>
+
+<!-- ===== NO PANEL WRAPPER — page-wide ===== -->
+<div class="tabbar" role="tablist" aria-label="Statements sections">
+  <button class="tab is-active" role="tab" aria-selected="true" data-target="personal">PERSONAL STATEMENTS</button>
+  <button class="tab" role="tab" aria-selected="false" data-target="questions">GUIDING QUESTIONS</button>
+  <button class="tab" role="tab" aria-selected="false" data-target="analysis">REFLECTIVE ANALYSIS</button>
+</div>
+
+<div class="panels">
+  <!-- PERSONAL -->
+    <!-- PERSONAL -->
+    <section id="personal" class="tab-panel" role="tabpanel" aria-hidden="false">
+      <div class="jumpbar" aria-label="Jump within Personal">
+        <button class="jump" data-target="#pw1">Week 1</button>
+        <button class="jump" data-target="#pw3">Week 3</button>
+      </div>
+      
+      <div class="prose">
+        <h2 id="pw1">Week 1 Prompt</h2>
+        <blockquote class="muted"><em><strong>What is teaching? What is learning? What brought you to teaching and why do you want to be a teacher? What is your vision of teaching and learning?</strong></em></blockquote>
+
+        <p>Teaching is the practice of facilitating meaningful learning experiences that enable students to think critically, be curious, develop skills, and grow holistically. It is a multifaceted job--requiring empathy, creativity, and attentiveness, as well as a deep understanding of curriculum content, pedagogy, and child development. Teaching is not solely defined by imparting knowledge. I believe teaching means <em>knowing</em> students, <em>empowering</em> students, and <em>guiding</em> students as they grow. Biologically, learning is the process of forming new neural pathways and connections in the brain. Behaviourally, it involves acquiring new skills or deepening existing ones through experiences such as instruction, discussion, inquiry, experimentation, and problem-solving. I also believe that learning extends beyond the retention of information; it is most meaningful when students generate new ideas, questions, and perspectives that reshape how they understand the world around them.</p>
+  
+        <p>My own educational journey shaped my desire to become a teacher. Early on, school was a place of joy, exploration, and creativity. By second grade, after already completing four years of formal education, I was a curious and eager learner. I dreamed of becoming an author, and my teacher supported that passion by laminating my mystery stories so I could share them during “show and tell.” Learning felt investigative and empowering. However, as I progressed into high school, my experience at school became procedural and performance-driven. Grades became my primary source of motivation and identity. The curiosity I once had faded into a fixation on numerical outcomes. My undergraduate studies in Operations Research and Information Engineering marked a turning point. Through courses in coding, mathematical modelling, and statistical simulation, I gained a deeper understanding of how mathematics operates in business, finance, and public services. For the first time in many years, I felt reconnected to utility of what I was learning. I understood the relevance of applied mathematics and how it informs real decisions. This rediscovery ignited my passion for teaching and education. As I now prepare to enter the teaching profession, I am excited to challenge myself to make math and science meaningful to every kind of learner and intersect curriculum content with students' lived experiences.</p> 
+  
+        <p>My vision of teaching is one that is equitable, safe, inspiring, and responsive to individual student needs. My vision of my classroom is an environment where students feel safe, valued, seen and notice their own potential. My experiences as a student-athlete, coach, and Residential Assistant at Trinity College School has shaped this vision. While living in the boarding school residence amongst 50 high school girls from around the world, I came to recognize that students’ identities extend far beyond their participation in the classroom—they are athletes, musicians, writers, leaders, creators, and innovators, who have a rich diversity of backgrounds and lived experiences. To me, teaching is not only about imparting subject knowledge but also about recognizing each student’s strengths, passions, and areas of growth in the classroom and their surrounding communities.</p>
+
+        <br>
+        <h2 id="pw3">Week 3 Prompt</h2>
+        <blockquote class="muted"><em><strong>2.  Taking into account the OCT Ethical Standards & Standards of Practice, discuss how they relate to your responsibility as a future educator to address Canada's history of residential schools? Consider what you can do to "Build student capacity for intercultural understanding, empathy, and mutual respect" (section 63, iii). Reflect on what you may need to learn or unlearn (the response should be about 2 paragraphs)</strong></em></blockquote>
+
+        <p>
+        The OCT Ethical Standards of Care, Respect, Trust, and Integrity are foundational values that align with the TRC’s <em>Calls to Action</em>. These pillars encourage me to approach Indigenous education with empathy, cultural humility, and a willingness to listen and learn. Similarly, the OCT Standards of Practice, including <em>Ongoing Professional Learning</em> and <em>Commitment to Students and Student Learning</em>, remind me that it is not enough to simply include Indigenous content in my classroom instruction; I must also work to unlearn colonial biases I may unknowingly carry. Sections 62 through 65 of the TRC outline the role I play in this national effort, and I am supported in that journey by Ontario’s Ministry of Education and my teacher education at Ontario Tech. As a teacher candidate, I am responsible for creating classroom spaces that honour Indigenous ways of knowing and being and "build student capacity for intercultural understanding, empathy, and mutual respect" (TRC Call to Action 63.iii). To begin to honour this commitment, I started curating meaningful resources that will help me thoughtfully integrate Indigenous practices, into both my instruction and personal development. However, I recognize that resource selection is only one step. It is equally important that I have open dialogue with students, recognize the suffering that occurred at the residential schools, contextualize and honour the materials I use, and model consistent respect for the First Peoples of Canada. This is one actionable way I will contribute towards truth and reconciliation on a personal level, as well as with my students.
+        </p>
+        <p>
+        Here are two powerful sources I’ve discovered so far:  
+        </p>
+        <p>
+        1. National Centre for Collaboration in Indigenous Education
+        </p>
+        <p><a href ="https://www.nccie.ca/teaching-resource-centre">https://www.nccie.ca/teaching-resource-centre"</a>
+        </p>
+        <p>
+        These lesson plans are grounded in the Land and People of specific regions. The creators explicitly invite educators to use them while remaining mindful of the diversity among First Peoples across Canada.
+        </p>
+        <p>
+        2. University of Toronto Indigenous Education Guide
+        </p>
+        <p><a href="https://guides.library.utoronto.ca/indigenouseducation/lessonplans">https://guides.library.utoronto.ca/indigenouseducation/lessonplans</a>
+        <p>
+        <p>
+        This is a central hub linking to many valuable resources, including <a href="https://mathcentral.uregina.ca/RR/database/RR.09.00/treptau1/mathcontent">one I plan to use in my math classroom.</a>, which thoughtfully integrates Indigenous knowledge with mathematics instruction.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===== QUESTIONS ===== -->
+    <section id="questions" class="tab-panel hidden" role="tabpanel" aria-hidden="true">
+      <!-- Jumpbar for QUESTIONS only -->
+      <div class="jumpbar" aria-label="Jump within Questions">
+        <button class="jump" data-target="#gw2">Week 2</button>
+        <button class="jump" data-target="#gw3">Week 3</button>
+        <button class="jump" data-target="#gw4">Week 4</button>
+      </div>
+
+      <div class="prose">
+        <h2 id="gw2">Week 2 Prompts</h2>
+        <blockquote class="muted"><em><strong>1. What comes to mind when you hear "classroom management?" Where did you get this impression? What role does it have in teaching and learning?</strong></em></blockquote>
+        <p>To me, classroom management employs strategies to capture attention, engage learners, encourage participation, and maintain a safe and respectful learning environment. I developed this impression not only from my own schooling in Ontario but also through my time as an assistant teacher at a private high school. Many of my teachers used clapping techniques, flickering the lights, or even a stern stare to recenter the class’s focus. Yet I have come to believe that classroom management extends far beyond attention-grabbing and behaviour mediation.</p>
+
+        <p>As a teaching assistant, I observed mentor teachers who established meaningful connections with students by coaching sports, asking about hobbies, or recognizing individual strengths and challenges. These teachers also opened space for dialogue by discussing expectations at the start of the year and providing students with choices in assignment due dates and project topics. The resulting classroom culture felt collaborative and respectful, which I suspect reduced the frequency of disruptions and behavioural interventions. At the same time, I recognize my perspective is shaped by the uniqueness of that school. Smaller-than-average class sizes and a student body largely composed of families who paid tuition (and therefore often chose to be there) likely influenced classroom dynamics. I suspect the classroom management strategies I observed may have been more effective in that context than they might be in a different one. Recognizing this, I see classroom management as an ongoing process of observation, adaptation, and reflection, rather than a fixed set of techniques.</p>
+
+        <p>As discussed in Foundations 1, good classroom management is a prerequisite for productive teaching and learning. When students feel safe, respected, and intrigued, they are more likely to actively participate in class, ask questions, and collaborate with peers. Without reliable classroom management strategies, meaningful instruction is difficult to achieve, as distractions, emotions, and anxiety can easily create barriers between students and the course material.</p>
+        <br>
+        <blockquote class="muted"><em><strong>2. How does a learning community contribute to the learning process?</strong></em></blockquote>
+        <p>
+          A learning community contributes to the learning process through mutual respect for mistakes, considerate grading practices, collaborative relationships, cultural awareness, positive colleague relationships, and meaningful connections to the broader community. <em>How People Learn: Brain, Mind, Experience, and School</em> identifies these components as features of community-centred environments. Chapter 6 notes that “learning seems to be enhanced by social norms that value the search for understanding and allow students (and teachers) the freedom to make mistakes” (Brown & Campione, 1994; Cobb et al., 1992). Mistakes are an inevitable and invaluable part of the learning process, and when they are welcomed and constructively reflected upon, they enable growth. The National Research council also emphasizes the importance of fair and considerate grading practices. Systems that publicly distinguish high and low-achieving students risk creating divisive relationships between students while fair, confidential, and growth-oriented grading practices encourage rapport (National Research Council, 146) . Similarly, applying course concepts to students’ lived experiences enhances engagement. <em>How People Learn</em> reminded me that students spend only a small percentage of their time in classrooms compared to home and community environments (National Research Council, 148). This statistic highlights the importance of connection between school and students’ personal lives, extra-curricular activities, community centres, and local businesses. When teachers deliberately create these bridges, learning becomes more relevant and exciting. At the same time, a learning community is also enriched by cultural integration. Chapter 6 also identifies the value of teacher-teacher respect and collaboration, citing multiple academic studies reporting this finding ( National Research Council, 147). Ultimately, a strong learning community is the foundation for deep engagement, positive relationships, and motivation. 
+        </p>
+        <br>
+        <blockquote class="muted"><em><strong>3.  Why must learning environments be student-centred?</strong></em></blockquote>
+        <p>
+        Learning environments must be student-centred in order for students to feel connected, valued, and supported in school. According to <em>How People Learn: Brain, Mind, Experience, and School</em>, student-centred environments thoughtfully consider learners' prior knowledge, skills, attitudes, and beliefs, and build on their existing conceptual and cultural knowledge (National Research Council, p. 133). As a teacher candidate, I am committed to incorporating student-centred strategies in my future classroom. In particular, I plan to use observation and diagnostic teaching to identify misconceptions and tailor instruction to each learner’s needs. Furthermore, demonstrating sensitivity to students’ cultural backgrounds and language practices promotes inclusion while improving student engagement, comfort, and participation.
+        </p>
+        <br>
+        <blockquote class="muted"><em><strong>4. Why must learning environments be assessment-centred?</strong></em></blockquote>
+        <p>
+        Learning environments must be assessment-centred in order to determine whether students are progressing toward learning goals. Assessment-centred environments provide frequent opportunities for students to receive feedback, make revisions, and improve their understandings. <em>How People Learn: Brain, Mind, Experience, and School</em> reminds me to thoughtfully design assessments and incorporate formative assessments, observations, peer-to-peer feedback, and self-assessment. These strategies make assessments an ongoing part of the learning process, as opposed to an infrequent performative measure. As a teacher candidate, I recognize that assessments provide meaningful insights for teachers but also empower students to take ownership of their learning through metacognitive reflection and revision.
+        </p>
+        <br>
+        <h2 id="gw3">Week 3 Prompt</h2>
+<blockquote class="muted"><em><strong>1. Using your understanding of backward design AND the Ontario Tech lesson plan template as a tool to guide your planning, where would you feel you want to start the planning process? Why? Remember, this isn't a linear process, and there is no one way. Consider the manner in which you would work through the template (the response should be 1-2 paragraphs in length).</strong></em></blockquote>
+<p>
+First and foremost, I would want to begin the *overall* planning process with long-range planning and defining units that will comprehensively cover the course strands outlined in the Ontario Curriculum. To tentatively outline this, I would use the school calendar to map out the approximate duration of each unit, accounting for PA days, modified schedules, and school-wide events.. Then, for a specific unit, I would cluster or separate specific curriculum expectations into lessons. In accordance with the principles of *backward design*, I would begin a *specific lesson* planning process by identifying Ontario Curriculum expectation(s) to focus on in the lesson. As mentioned by the Understanding by Design® Framework, "In the first stage of backward design, we consider our goals, examine established content standards (national, state, province, and district), and review curriculum expectations." (McTighe and Wiggins, 2). In the Ontario Tech lesson plan template, I would begin with section 7: *Learning Goals and Success Criteria* first, being sure to write the learning goals and success criteria in student-friendly language, connect them to specific expectations, and consider using focus questions. This step also aligns with the _Plot the Path_ stage of lesson planning described in _Uncommon Sense Teaching: Practical Insights in Brain Science to Help Students Learn_. 
+</p>
+<p>
+Before completing the rest of the template, I would spend time consulting exemplars and researching effective, evidence-based teaching strategies to ensure thoughtful lesson design. I would then create both pre- and post-assessment methods aligned with the success criteria, such as observation opportunities or performance tasks, to measure student understanding. Only then would I begin to plan the learning experiences and instructional flow, following the _Minds On, Action, and Consolidation_ framework. As this process unfolds, I recognize that it is non-linear and iterative. Discussions in Foundations 1 have emphasized that effective planning involves continuous reflection and revision. For example, after outlining the _Organizing the Learning Experience_ segments, I may realize the activity addresses additional expectations, prompting a return to the _Learning Goals and Success Criteria_ section. This kind of reflective revision is something I plan to engage in throughout the entire planning process. Finally, after delivering the lesson, Section 10: _Reflective Practice_ provides an opportunity to analyze student responses, assess my instructional decisions, and revise the lesson accordingly. 
+</p>
+        <h2 id="gw4">Week 4 Prompt</h2>
+
+        <blockquote class="muted"><em><strong>1. Consider the 'big three' questions for your lesson plan and use this time to develop them. For reference, use the image below from the lecture. Remember, these three questions help to guide and illustrate the bigger picture of the lesson. They should be brief but succinct! Have a look at 'Section 1 on the lesson plan to view the questions and use the resource linked to this section. Draft your responses to the three questions. Keep in mind: you are learning to teach and this is a work in progress! When you have finished, in a few sentences, reflect on how well you feel the responses to the questions have addressed: assessment, instructional activities and learning outcomes (one paragraph). Remember, you can return to these responses and refine them as you go. This DLP response simply gives you the time and space to put your ideas down.</strong></em></blockquote>
+        <b>Guiding Questions and Responses:</b>
+        <br>
+        <figure class="img-frame">
+        <a href="https://drive.google.com/file/d/1RHbY3nGKsUsm0ZMlrJdp55WpsuNsF7Tf/view?usp=sharing" target="_blank" rel="noopener">
+          <img
+            src="https://drive.google.com/uc?export=view&id=1RHbY3nGKsUsm0ZMlrJdp55WpsuNsF7Tf"
+            srcset="
+              https://drive.google.com/thumbnail?id=1RHbY3nGKsUsm0ZMlrJdp55WpsuNsF7Tf&sz=w640 640w,
+              https://drive.google.com/thumbnail?id=1RHbY3nGKsUsm0ZMlrJdp55WpsuNsF7Tf&sz=w1024 1024w,
+              https://drive.google.com/thumbnail?id=1RHbY3nGKsUsm0ZMlrJdp55WpsuNsF7Tf&sz=w1600 1600w"
+            sizes="(max-width: 700px) 100vw, 700px"
+            alt="Example diagram for the garden design task: trapezoid boundary, accessible path, and hexagonal pond"
+            loading="lazy"
+            width="1024"
+            height="682"
+          >
+        </a>
+        <figcaption>Click to open the full-size image in a new tab.</figcaption>
+      </figure>
+        <br>
+        <ol>
+        <li><p><strong>What will students learn and be able to do?</strong></p>
+        <ul>
+        <li>Students will learn how to select and use digital and media tools to develop a solution to a real-world problem.</li>
+        <li>Students will be able to convert units between millimetres, centimetres, and metres.</li>
+        <li>Students will be able to construct circles and calculate areas, perimeter, and circumference of rectangles and circles.</li>
+        </ul>
+        </li>
+        <li><p><strong>How will I know that each student achieved the intended learning?</strong></p>
+        <ul>
+        <li>Students will create a scaled diagram of their garden using digital media tools.</li>
+        <li>I will observe students performing measurement calculations on whiteboards.</li>
+        <li>As a written or verbal exit ticket, each students will:<ul>
+        <li>(a) describe one affordance &amp; one constraint of each digital media tool they used.</li>
+        <li>(b) state one design decision they made and justify their decision. </li>
+        </ul>
+        </li>
+        </ul>
+        </li>
+        <li><p><strong>How can I lead students to reach the learning goals within the class period?</strong></p>
+        <ul>
+        <li>I can establish checkpoints. At each checkpoint I will observe the group&#39;s progress and scaffold if needed, or have them move on to the next step.</li>
+        </ul>
+        </li>
+        <li><p><strong>Big Idea or Overarching Principle--What one idea do you want your students to take away from this lesson?</strong> </p>
+        <ul>
+        <li>Digital media tools are useful for design, brainstorming, and collaboration.</li>
+        <li>Real-world problem solving does not always have 1 correct answer and involves balance between constraints.
+        Reflection: Overall, my guiding question responses comprehensively address the learning outcomes by linking to specific curriculuM expectations. In my question 2 response, I also define the instructional activity that should lead students there: a design task supported by checkpoints, observation, and scaffolding. My response to question 3 addresses my assessment plan which includes a product (a digital media diagram), formative checks for calculation skills; and a reflective exit ticket to spark students&#39; thinking about criteria to consider when choosing a digital or media tool. In reflecting on my responses, I recognize the value in asking myself &quot;how&quot; questions. Reflecting on my responses, I recognize the value of posing “how” questions. These prompt me to consider how I will model expectations, provide opportunities for active engagement, and offer feedback—all of which align with the engagement strategies outlined by Sarah A. Nagroto et al. (2019).</li>
+        </ul>
+        </li>
+        </ol>
+        <p>One important addition I would make is to account more explicitly for prerequisite knowledge. This includes revisiting expectations taught earlier in the term and relevant prior-grade content to ensure that the problem-solving task is accessible to all learners. As Darling-Hammond and Baratz-Snowden (2007, p.112) emphasize that effective teachers <em>&quot;organize activities, materials, and instruction based on students&#39; prior knowledge and level of development so that all students can be successful. They know what conceptions students bring with them about the subject and what misconceptions are likely to cause them confusion, and they design their lessons to overcome these misinterpretations.&quot;</em>. Similarly, Donovan et al. assert &quot;<em>students come to the classroom with preconceptions about how the world works. If their initial understanding is not engaged, they may fail to grasp new concepts and information presented in the classroom.&quot;</em> (1999, p.2) Therefore, it is important that I actively identify and address knowledge gaps, before or during the activity, to ensure all students can access the low-floor of the task and meaningfully participate. To make this a deliberate part of my initial planning, I will consider adding a guiding question such as: <em>&quot;What minimum knowledge and skills must students have to engage with this task?&quot;</em> Then, in Section 3 of the lesson plan template (<em>Pre-assessment and Addressing Student Needs</em>), I can explore design pre-assessment techniques and differentiation strategies in greater detail according to the minimum knowledge students need to meaningful engage in the activity&#39;s &quot;low floor&quot;.</p>
+        <ol>
+        <li><strong>Prerequisites: What minimum knowledge and skills must students have to engage?</strong><ul>
+        <li>Students should recognize metric measurement units (mm, cm, m)</li>
+        <li>Students should recall how to calculate the perimeter and area of rectangles and triangles.</li>
+        <li>Students should have enough technological fluency to use a computer to access digital and media tools.</li>
+        <li>Students should know the definitions of diameter, radius, and circumference and understand the formulae for area and circumference of a circle. 
+        I should already have a sense of students&#39; technological fluency from getting to know them during the term. During the activity, I will use checkpoints and scaffolding to address knowledge and skill gaps.</li>
+        </ul>
+        </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ===== ANALYSIS ===== -->
+    <section id="analysis" class="tab-panel hidden" role="tabpanel" aria-hidden="true">
+      <!-- Jumpbar for ANALYSIS (single anchor example) -->
+      <div class="jumpbar" aria-label="Jump within Analysis">
+        <button class="jump" data-target="#ra-top">Top</button>
+      </div>
+
+      <div class="prose">
+        <h2 id="ra-top">Reflective Analysis</h2>
+        <p>Week _ Prompt</p>
+      </div>
+    </section>
+  </div>
+<button id="backToTop" class="backtotop backtotopAccent" aria-label="Back to top" title="Back to top">↑</button>
+
+
+<script>
+  /* ===== Config ===== */
+  const TRANSITION = "fade"; // "fade" or "slide"
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ===== Tabs & Panels ===== */
+  const tabs   = [...document.querySelectorAll('.tabbar .tab')];
+  const panels = {
+    personal : document.getElementById('personal'),
+    questions: document.getElementById('questions'),
+    analysis : document.getElementById('analysis')
+  };
+  let current = 'personal';
+
+  // Initial visibility
+  Object.entries(panels).forEach(([id, el]) => {
+    const on = id === current;
+    el.classList.toggle('hidden', !on);
+    el.setAttribute('aria-hidden', String(!on));
+  });
+  tabs.forEach(b => {
+    const on = b.dataset.target === current;
+    b.classList.toggle('is-active', on);
+    b.setAttribute('aria-selected', String(on));
+  });
+
+  /* ===== Panel swap helpers ===== */
+  function swapImmediate(nextId){
+    if (nextId === current) return;
+
+    // Tabs state
+    tabs.forEach(b=>{
+      const on = b.dataset.target === nextId;
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-selected', String(on));
+    });
+
+    // Panels state
+    panels[current].classList.add('hidden');
+    panels[current].setAttribute('aria-hidden', 'true');
+
+    panels[nextId].classList.remove('hidden');
+    panels[nextId].setAttribute('aria-hidden', 'false');
+
+    current = nextId;
+    updateStickyHeights();
+  }
+
+  function animateSwap(nextId){
+    if (nextId === current) return;
+    if (prefersReduced) { swapImmediate(nextId); return; }
+
+    document.body.classList.add('animating');
+    const from = panels[current];
+    const to   = panels[nextId];
+
+    // Prepare entering panel
+    to.classList.remove('hidden');
+    to.setAttribute('aria-hidden', 'false');
+    to.classList.remove(`${TRANSITION}-leave`, `${TRANSITION}-leave-active`);
+    to.classList.add(`${TRANSITION}-enter`);
+    void to.offsetWidth; // reflow
+
+    // Start animations
+    from.classList.add(`${TRANSITION}-leave`);
+    requestAnimationFrame(()=>{
+      from.classList.add(`${TRANSITION}-leave-active`);
+      to.classList.add(`${TRANSITION}-enter-active`);
+      to.classList.remove(`${TRANSITION}-enter`);
+    });
+
+    let finished = false;
+    const done = () => {
+      if (finished) return;
+      finished = true;
+
+      from.classList.add('hidden');
+      from.setAttribute('aria-hidden','true');
+      from.classList.remove(`${TRANSITION}-leave`, `${TRANSITION}-leave-active`);
+      to.classList.remove(`${TRANSITION}-enter-active`);
+
+      current = nextId;
+      document.body.classList.remove('animating');
+      updateStickyHeights();
+    };
+
+    const fallback = setTimeout(done, 450);
+    const endHandler = () => { clearTimeout(fallback); done(); };
+    from.addEventListener('transitionend', endHandler, { once:true });
+    to.addEventListener('transitionend', endHandler, { once:true });
+  }
+
+  function activate(id){
+    if (!panels[id]) return;
+    tabs.forEach(b=>{
+      const on = b.dataset.target === id;
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-selected', String(on));
+    });
+    prefersReduced ? swapImmediate(id) : animateSwap(id);
+  }
+
+  tabs.forEach(btn => btn.addEventListener('click', () => activate(btn.dataset.target)));
+
+  /* ===== Hash support (e.g., #analysis) ===== */
+  const hash = location.hash.replace('#','');
+  if (hash && panels[hash]) {
+    current = hash;
+    Object.entries(panels).forEach(([id, el])=>{
+      const on = id === current;
+      el.classList.toggle('hidden', !on);
+      el.setAttribute('aria-hidden', String(!on));
+    });
+    tabs.forEach(b=>{
+      const on = b.dataset.target === current;
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-selected', String(on));
+    });
+  }
+
+  /* ===== Sticky offsets for jump headings (used by CSS scroll-margin-top) ===== */
+  function updateStickyHeights(){
+    const siteHeader = document.querySelector('.site-header, header.site, .global-header, header[role="banner"], header.sticky');
+    const siteHeaderIsSticky = siteHeader && /fixed|sticky/.test(getComputedStyle(siteHeader).position);
+    const siteHeaderH = siteHeaderIsSticky ? siteHeader.offsetHeight : 0;
+
+    const visibleJumpbar = [...document.querySelectorAll('.tab-panel:not(.hidden) .jumpbar')][0]
+                        || document.querySelector('.jumpbar');
+    const jumpbarH = visibleJumpbar ? visibleJumpbar.offsetHeight : 56;
+
+    // Expose to CSS
+    document.documentElement.style.setProperty('--site-header-h', siteHeaderH + 'px');
+    document.documentElement.style.setProperty('--tabbar-h', (document.querySelector('.tabbar')?.offsetHeight || 56) + 'px');
+    document.documentElement.style.setProperty('--jumpbar-h', jumpbarH + 'px');
+  }
+  window.addEventListener('load', updateStickyHeights, { once:true });
+  window.addEventListener('resize', updateStickyHeights);
+
+  /* ===== Per-panel jump buttons (Week 1 / Week 3 etc.) ===== */
+  Object.values(panels).forEach(panel=>{
+    const jb = panel.querySelector('.jumpbar');
+    if (!jb) return;
+    jb.addEventListener('click', (e)=>{
+      const btn = e.target.closest('.jump');
+      if (!btn) return;
+      const selector = btn.getAttribute('data-target');
+      if (!selector) return;
+      const target = panel.querySelector(selector);
+      if (!target) return;
+
+      target.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth', block: 'start' });
+    });
+  });
+
+  /* ===== Back-to-top: always visible, truly floats, scrolls the PAGE to absolute top ===== */
+(function(){
+  const btn = document.getElementById('backToTop');
+  if (!btn) return;
+
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const root = document.scrollingElement || document.documentElement;
+
+  // Height of any fixed/sticky header sitting at the very top of the page
+  function getHeaderOffset(){
+    let offset = 0;
+    const candidates = document.querySelectorAll(
+      'header, .site-header, header[role="banner"], .global-header, .top-app-bar'
+    );
+    candidates.forEach(el=>{
+      const cs = getComputedStyle(el);
+      const isTop = (cs.position === 'fixed' || cs.position === 'sticky') &&
+                    (parseInt(cs.top,10) === 0 || cs.top === '0px');
+      const visible = (el.offsetParent !== null) || cs.position === 'fixed';
+      if (isTop && visible) offset += (el.offsetHeight || 0);
+    });
+    return offset;
+  }
+
+  // Document Y for an element
+  function docTop(el){
+    const r = el.getBoundingClientRect();
+    const scrollY = window.pageYOffset || root.scrollTop || 0;
+    return r.top + scrollY;
+  }
+
+  function scrollToTabs(){
+    const tabbar = document.querySelector('.tabbar');
+    const padding = 8;
+    let targetY = 0;
+
+    if (tabbar){
+      const y = docTop(tabbar);
+      const headerOffset = getHeaderOffset();
+      targetY = Math.max(y - headerOffset - padding, 0);
+    }
+
+    // smooth with robust fallback
+    window.scrollTo({ top: targetY, behavior: prefersReduced ? 'auto' : 'smooth' });
+    setTimeout(()=>{
+      // nudge for browsers/hosts that fight smooth scrolling
+      root.scrollTop = targetY;
+      document.body.scrollTop = targetY;
+    }, 80);
+  }
+
+  btn.addEventListener('click', scrollToTabs);
+})();
+</script>
